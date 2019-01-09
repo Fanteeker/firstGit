@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+	</head>
+	<body>
+		<input type="text" id="msg"/>
+		<input type="button" value="订阅主题" onclick="subscribe()"/>
+		<input type="button" value="发送消息" onclick="send()"/>
+		<input type="button" value="取消订阅" onclick="unsubscribe()"/>
+	</body>
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js"></script>
+	
+	<script>
+		//var hostname = '192.168.182.2',
+		var hostname = 'localhost',
+		port = 9080,
+		clientId = 'clientmao2080',
+		timeout = 5,
+		keepAlive = 50,
+		cleanSession = false,
+		ssl = false,
+		userName = 'admin',
+		password = 'password',
+		topic = 'bar';
+		client = new Paho.MQTT.Client(hostname, port, clientId); 
+	
+		var options = {
+			invocationContext: {
+				host : hostname,
+				port: port,
+				path: client.path,
+				clientId: clientId
+			},
+			timeout: timeout, 
+			keepAliveInterval: keepAlive, 
+			cleanSession: cleanSession, 
+			useSSL: ssl, 
+			userName: userName,
+			password: password,
+			onSuccess: onConnect,
+			onFailure: function(e){
+				console.log(e);
+			}
+		};
+		
+		client.connect(options); 
+ 
+		function onConnect() {
+			console.log("onConnected");
+			
+		}
+	
+		client.onConnectionLost = onConnectionLost; 
+ 
+		client.onMessageArrived = onMessageArrived; 
+ 
+		function onConnectionLost(responseObject) {
+			console.log(responseObject);
+			if (responseObject.errorCode !== 0) {
+				console.log("onConnectionLost:"+responseObject.errorMessage); 
+				console.log("连接已断开"); 
+			}
+		} 
+	
+		function onMessageArrived(message) { 
+			console.log("收到消息:"+message.payloadString); 
+			alert("收到訊息"+ message.payloadString);
+		} 
+	
+		function send(){
+			var s = document.getElementById("msg").value;
+			if(s.length > 0){
+ 
+				message = new Paho.MQTT.Message(s);
+				message.destinationName = topic;
+				client.send(message);
+				document.getElementById("msg").value = "";
+				console.log("消息发送成功"+s);
+				alert("消息发送成功"+s);
+			}
+			else {
+				alert("发送的消息不能为空");
+			}
+		}
+	
+		var count = 0;
+	
+		function subscribe(){
+			client.subscribe(topic, { qos: 2});
+			console.log("订阅主题:"+topic); 
+ 
+		}
+		
+		function unsubscribe(){
+ 
+			client.unsubscribe(topic);
+			console.log("取消订阅主题:"+topic); 
+		}
+	
+		
+	</script>
+ 
+</html>
